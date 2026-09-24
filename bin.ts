@@ -12,6 +12,7 @@ import {
 } from '@teaui/core'
 
 import {parseDiff, serializeDiff} from './diff.js'
+import {loadReview, reviewPath, saveReview} from './persist.js'
 import {buildReviewView} from './view.js'
 
 async function readStdin(): Promise<string> {
@@ -53,9 +54,12 @@ async function run(outputPath: string) {
     return
   }
 
+  const savePath = reviewPath(process.cwd(), diffText)
+  loadReview(savePath, parsed)
+
   reopenStdinAsTty()
 
-  const view = buildReviewView(parsed)
+  const view = buildReviewView(parsed, () => saveReview(savePath, parsed))
 
   interceptConsoleLog()
   const [screen] = await Screen.start(
@@ -72,6 +76,7 @@ async function run(outputPath: string) {
   )
 
   screen.onExit(() => {
+    saveReview(savePath, parsed)
     fs.writeFileSync(outputPath, serializeDiff(parsed))
     console.log(`review: wrote ${outputPath}`)
   })

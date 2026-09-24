@@ -5,10 +5,17 @@ export interface PatchLine {
   text: string
 }
 
-export interface Patch {
-  lines: PatchLine[]
+/**
+ * The review state attached to every file, section, and patch: whether it's
+ * checked off (collapsed), and the reviewer's comment.
+ */
+export interface Reviewable {
   reviewed: boolean
   comment: string
+}
+
+export interface Patch extends Reviewable {
+  lines: PatchLine[]
 }
 
 export type SectionBlock =
@@ -16,21 +23,17 @@ export type SectionBlock =
   | {type: 'patch'; patch: Patch}
   | {type: 'meta'; raw: string}
 
-export interface Section {
+export interface Section extends Reviewable {
   headerLine: string
   blocks: SectionBlock[]
-  reviewed: boolean
-  comment: string
 }
 
-export interface FileDiff {
+export interface FileDiff extends Reviewable {
   diffLine: string
   extraHeaderLines: string[]
   fromLine?: string
   toLine?: string
   sections: Section[]
-  reviewed: boolean
-  comment: string
 }
 
 export interface ParsedDiff {
@@ -175,6 +178,27 @@ export function parseDiff(input: string): ParsedDiff {
   closeFile()
 
   return {preamble, files}
+}
+
+/**
+ * Every file, section, and patch in document order - each file, then each of
+ * its sections, each followed by its patches. The position in this list is
+ * the item's stable index for a given diff.
+ */
+export function reviewItems(parsed: ParsedDiff): Reviewable[] {
+  const items: Reviewable[] = []
+  for (const file of parsed.files) {
+    items.push(file)
+    for (const section of file.sections) {
+      items.push(section)
+      for (const block of section.blocks) {
+        if (block.type === 'patch') {
+          items.push(block.patch)
+        }
+      }
+    }
+  }
+  return items
 }
 
 function commentLines(comment: string): string[] {

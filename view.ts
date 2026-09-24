@@ -11,6 +11,7 @@ import {
 import type {
   FileDiff,
   Patch,
+  Reviewable,
   Section,
   SectionBlock,
   ParsedDiff,
@@ -34,21 +35,27 @@ const STYLE_COLLAPSED = new Style({dim: true})
  */
 function reviewRow(
   indent: number,
-  reviewed: boolean,
-  comment: string,
+  item: Reviewable,
   onReviewedChange: (value: boolean) => void,
-  onCommentChange: (value: string) => void,
+  onChange: () => void,
 ): View {
   const checkbox = new Checkbox({
-    value: reviewed,
-    onChange: onReviewedChange,
+    value: item.reviewed,
+    onChange: value => {
+      item.reviewed = value
+      onReviewedChange(value)
+      onChange()
+    },
   })
   const input = new Input({
-    value: comment,
+    value: item.comment,
     placeholder: 'add a comment…',
     multiline: true,
     wrap: true,
-    onChange: onCommentChange,
+    onChange: value => {
+      item.comment = value
+      onChange()
+    },
   })
   return Stack.right({
     paddingLeft: indent,
@@ -61,7 +68,11 @@ function line(text: string, style: Style, indent: number): Text {
   return new Text({text, style, paddingLeft: indent})
 }
 
-function buildPatchView(patch: Patch, indent: number): View {
+function buildPatchView(
+  patch: Patch,
+  indent: number,
+  onChange: () => void,
+): View {
   const content = Stack.down({
     children: patch.lines.map(l =>
       line(
@@ -75,21 +86,21 @@ function buildPatchView(patch: Patch, indent: number): View {
 
   const header = reviewRow(
     indent,
-    patch.reviewed,
-    patch.comment,
+    patch,
     value => {
-      patch.reviewed = value
       content.isVisible = !value
     },
-    value => {
-      patch.comment = value
-    },
+    onChange,
   )
 
   return Stack.down({children: [header, content]})
 }
 
-function buildSectionBlockView(block: SectionBlock, indent: number): View {
+function buildSectionBlockView(
+  block: SectionBlock,
+  indent: number,
+  onChange: () => void,
+): View {
   if (block.type === 'context') {
     return Stack.down({
       children: block.lines.map(text =>
@@ -100,12 +111,18 @@ function buildSectionBlockView(block: SectionBlock, indent: number): View {
   if (block.type === 'meta') {
     return line(block.raw, STYLE_META, indent)
   }
-  return buildPatchView(block.patch, indent)
+  return buildPatchView(block.patch, indent, onChange)
 }
 
-function buildSectionView(section: Section, indent: number): StickyGroup {
+function buildSectionView(
+  section: Section,
+  indent: number,
+  onChange: () => void,
+): StickyGroup {
   const blocksContent = Stack.down({
-    children: section.blocks.map(b => buildSectionBlockView(b, indent + 2)),
+    children: section.blocks.map(b =>
+      buildSectionBlockView(b, indent + 2, onChange),
+    ),
   })
   blocksContent.isVisible = !section.reviewed
 
@@ -116,16 +133,12 @@ function buildSectionView(section: Section, indent: number): StickyGroup {
 
   const header = reviewRow(
     indent,
-    section.reviewed,
-    section.comment,
+    section,
     value => {
-      section.reviewed = value
       blocksContent.isVisible = !value
       headerText.style = value ? STYLE_COLLAPSED : STYLE_SECTION_HEADER
     },
-    value => {
-      section.comment = value
-    },
+    onChange,
   )
 
   const sticky = new Sticky(Stack.down({children: [header, headerText]}))
@@ -133,7 +146,7 @@ function buildSectionView(section: Section, indent: number): StickyGroup {
   return {block, sticky, children: []}
 }
 
-function buildFileView(file: FileDiff): StickyGroup {
+function buildFileView(file: FileDiff, onChange: () => void): StickyGroup {
   const metaLines: View[] = file.extraHeaderLines.map(l =>
     line(l, STYLE_EXTRA_HEADER, 2),
   )
@@ -144,7 +157,7 @@ function buildFileView(file: FileDiff): StickyGroup {
     metaLines.push(line(file.toLine, STYLE_EXTRA_HEADER, 2))
   }
 
-  const sections = file.sections.map(s => buildSectionView(s, 2))
+  const sections = file.sections.map(s => buildSectionView(s, 2, onChange))
   const belowHeader = Stack.down({
     children: [...metaLines, ...sections.map(s => s.block)],
   })
@@ -157,16 +170,12 @@ function buildFileView(file: FileDiff): StickyGroup {
 
   const header = reviewRow(
     0,
-    file.reviewed,
-    file.comment,
+    file,
     value => {
-      file.reviewed = value
       belowHeader.isVisible = !value
       diffLineText.style = value ? STYLE_COLLAPSED : STYLE_DIFF_LINE
     },
-    value => {
-      file.comment = value
-    },
+    onChange,
   )
 
   const sticky = new Sticky(Stack.down({children: [header, diffLineText]}))
@@ -174,7 +183,14 @@ function buildFileView(file: FileDiff): StickyGroup {
   return {block, sticky, children: sections}
 }
 
-export function buildReviewView(parsed: ParsedDiff): View {
+/**
+ * `onChange` is called whenever a checkbox or comment changes (the new state
+ * has already been written to `parsed`).
+ */
+export function buildReviewView(
+  parsed: ParsedDiff,
+  onChange: () => void,
+): View {
   const children: View[] = []
   const groups: StickyGroup[] = []
 
@@ -187,7 +203,7 @@ export function buildReviewView(parsed: ParsedDiff): View {
   }
 
   for (const file of parsed.files) {
-    const group = buildFileView(file)
+    const group = buildFileView(file, onChange)
     groups.push(group)
     children.push(group.block)
     children.push(Separator.horizontal())
