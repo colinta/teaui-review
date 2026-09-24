@@ -1,0 +1,19 @@
+{
+  "include": ["./"],
+  "exclude": [".dist/", "node_modules/"],
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+    "outDir": ".dist",
+    "rootDir": "."
+  }
+}
