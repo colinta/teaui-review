@@ -177,6 +177,13 @@ export function parseDiff(input: string): ParsedDiff {
   return {preamble, files}
 }
 
+function commentLines(comment: string): string[] {
+  return comment
+    .trim()
+    .split('\n')
+    .map(line => `#> ${line}`.trimEnd())
+}
+
 function sectionHasComment(section: Section): boolean {
   if (section.comment.trim()) {
     return true
@@ -205,7 +212,7 @@ export function serializeDiff(parsed: ParsedDiff): string {
 
     out.push(file.diffLine)
     if (fileHasComment) {
-      out.push(`#> ${file.comment.trim()}`)
+      out.push(...commentLines(file.comment))
     }
     out.push(...file.extraHeaderLines)
     if (file.fromLine !== undefined) {
@@ -218,7 +225,7 @@ export function serializeDiff(parsed: ParsedDiff): string {
     for (const section of qualifyingSections) {
       out.push(section.headerLine)
       if (section.comment.trim()) {
-        out.push(`#> ${section.comment.trim()}`)
+        out.push(...commentLines(section.comment))
       }
       for (const block of section.blocks) {
         if (block.type === 'context') {
@@ -232,7 +239,7 @@ export function serializeDiff(parsed: ParsedDiff): string {
             ),
           )
           if (block.patch.comment.trim()) {
-            out.push(`#> ${block.patch.comment.trim()}`)
+            out.push(...commentLines(block.patch.comment))
           }
         }
       }

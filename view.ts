@@ -46,12 +46,14 @@ function reviewRow(
   const input = new Input({
     value: comment,
     placeholder: 'add a comment…',
+    multiline: true,
+    wrap: true,
     onChange: onCommentChange,
-    height: 1,
   })
   return Stack.right({
     paddingLeft: indent,
-    children: [checkbox, ['flex1', input]],
+    // keeps the checkbox on the first line of a multi-line comment
+    children: [Stack.down([checkbox]), ['flex1', input]],
   })
 }
 
