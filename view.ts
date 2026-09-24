@@ -1,7 +1,6 @@
 import {
   Checkbox,
   Input,
-  Scrollable,
   Separator,
   Stack,
   Style,
@@ -16,6 +15,7 @@ import type {
   SectionBlock,
   ParsedDiff,
 } from './diff.js'
+import {Sticky, StickyScroll, type StickyGroup} from './sticky.js'
 
 const STYLE_DIFF_LINE = new Style({bold: true})
 const STYLE_EXTRA_HEADER = new Style({dim: true})
@@ -101,7 +101,7 @@ function buildSectionBlockView(block: SectionBlock, indent: number): View {
   return buildPatchView(block.patch, indent)
 }
 
-function buildSectionView(section: Section, indent: number): View {
+function buildSectionView(section: Section, indent: number): StickyGroup {
   const blocksContent = Stack.down({
     children: section.blocks.map(b => buildSectionBlockView(b, indent + 2)),
   })
@@ -126,10 +126,12 @@ function buildSectionView(section: Section, indent: number): View {
     },
   )
 
-  return Stack.down({children: [header, headerText, blocksContent]})
+  const sticky = new Sticky(Stack.down({children: [header, headerText]}))
+  const block = Stack.down({children: [sticky, blocksContent]})
+  return {block, sticky, children: []}
 }
 
-function buildFileView(file: FileDiff): View {
+function buildFileView(file: FileDiff): StickyGroup {
   const metaLines: View[] = file.extraHeaderLines.map(l =>
     line(l, STYLE_EXTRA_HEADER, 2),
   )
@@ -140,8 +142,9 @@ function buildFileView(file: FileDiff): View {
     metaLines.push(line(file.toLine, STYLE_EXTRA_HEADER, 2))
   }
 
+  const sections = file.sections.map(s => buildSectionView(s, 2))
   const belowHeader = Stack.down({
-    children: [...metaLines, ...file.sections.map(s => buildSectionView(s, 2))],
+    children: [...metaLines, ...sections.map(s => s.block)],
   })
   belowHeader.isVisible = !file.reviewed
 
@@ -164,11 +167,14 @@ function buildFileView(file: FileDiff): View {
     },
   )
 
-  return Stack.down({children: [header, diffLineText, belowHeader]})
+  const sticky = new Sticky(Stack.down({children: [header, diffLineText]}))
+  const block = Stack.down({children: [sticky, belowHeader]})
+  return {block, sticky, children: sections}
 }
 
 export function buildReviewView(parsed: ParsedDiff): View {
   const children: View[] = []
+  const groups: StickyGroup[] = []
 
   if (parsed.preamble.length) {
     children.push(
@@ -179,9 +185,11 @@ export function buildReviewView(parsed: ParsedDiff): View {
   }
 
   for (const file of parsed.files) {
-    children.push(buildFileView(file))
+    const group = buildFileView(file)
+    groups.push(group)
+    children.push(group.block)
     children.push(Separator.horizontal())
   }
 
-  return Scrollable.down({children})
+  return new StickyScroll({children, groups})
 }
