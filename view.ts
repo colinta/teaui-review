@@ -68,19 +68,27 @@ function line(text: string, style: Style, indent: number): Text {
   return new Text({text, style, paddingLeft: indent})
 }
 
+/**
+ * `trailing` is the context that follows the patch (up to the next patch) -
+ * it's folded along with the patch lines.
+ */
 function buildPatchView(
   patch: Patch,
+  trailing: View[],
   indent: number,
   onChange: () => void,
 ): View {
   const content = Stack.down({
-    children: patch.lines.map(l =>
-      line(
-        `${l.kind === 'add' ? '+' : '-'}${l.text}`,
-        l.kind === 'add' ? STYLE_ADD : STYLE_REMOVE,
-        indent,
+    children: [
+      ...patch.lines.map(l =>
+        line(
+          `${l.kind === 'add' ? '+' : '-'}${l.text}`,
+          l.kind === 'add' ? STYLE_ADD : STYLE_REMOVE,
+          indent,
+        ),
       ),
-    ),
+      ...trailing,
+    ],
   })
   content.isVisible = !patch.reviewed
 
@@ -96,22 +104,52 @@ function buildPatchView(
   return Stack.down({children: [header, content]})
 }
 
-function buildSectionBlockView(
-  block: SectionBlock,
+function buildContextView(
+  block: Exclude<SectionBlock, {type: 'patch'}>,
   indent: number,
-  onChange: () => void,
 ): View {
-  if (block.type === 'context') {
-    return Stack.down({
-      children: block.lines.map(text =>
-        line(` ${text}`, STYLE_CONTEXT, indent),
-      ),
-    })
-  }
   if (block.type === 'meta') {
     return line(block.raw, STYLE_META, indent)
   }
-  return buildPatchView(block.patch, indent, onChange)
+  return Stack.down({
+    children: block.lines.map(text => line(` ${text}`, STYLE_CONTEXT, indent)),
+  })
+}
+
+/**
+ * Each patch owns the context after it, up to the next patch, so that folding
+ * a patch hides everything until the next checkbox. Context before the first
+ * patch isn't owned by any patch and stays visible.
+ */
+function buildSectionBlockViews(
+  blocks: SectionBlock[],
+  indent: number,
+  onChange: () => void,
+): View[] {
+  const views: View[] = []
+  let current: {patch: Patch; trailing: View[]} | undefined
+
+  function flush() {
+    if (current) {
+      views.push(
+        buildPatchView(current.patch, current.trailing, indent, onChange),
+      )
+    }
+  }
+
+  for (const block of blocks) {
+    if (block.type === 'patch') {
+      flush()
+      current = {patch: block.patch, trailing: []}
+    } else if (current) {
+      current.trailing.push(buildContextView(block, indent))
+    } else {
+      views.push(buildContextView(block, indent))
+    }
+  }
+  flush()
+
+  return views
 }
 
 function buildSectionView(
@@ -120,9 +158,7 @@ function buildSectionView(
   onChange: () => void,
 ): StickyGroup {
   const blocksContent = Stack.down({
-    children: section.blocks.map(b =>
-      buildSectionBlockView(b, indent + 2, onChange),
-    ),
+    children: buildSectionBlockViews(section.blocks, indent + 2, onChange),
   })
   blocksContent.isVisible = !section.reviewed
 
