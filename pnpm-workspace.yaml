@@ -1,0 +1,4 @@
+minimumReleaseAgeExclude:
+  - '@teaui/core@1.19.22'
+  - '@teaui/inspect@1.19.22'
+  - '@teaui/term@1.19.22'

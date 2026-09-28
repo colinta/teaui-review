@@ -25,6 +25,23 @@ export class Sticky extends Container {
     super({child: header})
   }
 
+  /**
+   * If pinned, puts the header back in the content and scrolls so that it
+   * stays on the row where it's drawn now. Call this after changing the
+   * content (e.g. collapsing the block), otherwise the scroll view jumps.
+   */
+  unpin() {
+    if (!this.isPinned) {
+      return
+    }
+
+    let view = this.parent
+    while (view && !(view instanceof StickyContent)) {
+      view = view.parent
+    }
+    view?.reveal(this)
+  }
+
   render(viewport: Viewport) {
     if (!this.isPinned) {
       super.render(viewport)
@@ -46,7 +63,10 @@ export interface StickyGroup {
 
 interface Pinned {
   sticky: Sticky
+  // where the header is drawn (less than `base` while being pushed up)
   y: number
+  // the row just below the parent pinned headers
+  base: number
 }
 
 /**
@@ -59,11 +79,42 @@ class StickyContent extends Stack {
   groups: StickyGroup[] = []
   pinned: Pinned[] = []
   visibleWidth = 0
+  #available = Size.zero
+  #scrollTarget: number | undefined
 
   render(viewport: Viewport) {
     this.visibleWidth = viewport.visibleRect.size.width
+    this.#available = viewport.contentSize
     this.#updatePinned(viewport.visibleRect.origin.y, viewport.contentSize)
     super.render(viewport)
+  }
+
+  get #scrollable() {
+    return this.parent as Scrollable
+  }
+
+  reveal(sticky: Sticky) {
+    const pinned = this.pinned.find(p => p.sticky === sticky)
+    const top = offsetWithin(this, sticky, this.#available)
+    if (!pinned || top === undefined) {
+      return
+    }
+
+    sticky.isPinned = false
+    this.#scrollTarget = top - pinned.base
+    this.#scrollable.scrollTo(this.#scrollTarget)
+  }
+
+  /**
+   * scrollTo() clamps against the content size from the previous render. If
+   * the content just shrank (a block was collapsed), that clamp was too
+   * generous - scroll again now that the new size is known.
+   */
+  settleScroll() {
+    if (this.#scrollTarget !== undefined) {
+      this.#scrollable.scrollTo(this.#scrollTarget)
+      this.#scrollTarget = undefined
+    }
   }
 
   #updatePinned(scrollY: number, available: Size) {
@@ -101,7 +152,7 @@ class StickyContent extends Stack {
       // when the end of the block reaches the pinned header, push it up
       const y = Math.min(base, bottom - scrollY - height)
       group.sticky.isPinned = true
-      this.pinned.push({sticky: group.sticky, y})
+      this.pinned.push({sticky: group.sticky, y, base})
       base = y + height
       groups = group.children
     }
@@ -164,6 +215,7 @@ export class StickyScroll extends Container {
 
   render(viewport: Viewport) {
     super.render(viewport)
+    this.#content.settleScroll()
 
     const width = this.#content.visibleWidth
     // deepest first, so a header being pushed up slides under its parent

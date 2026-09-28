@@ -137,6 +137,7 @@ function buildSectionView(
     value => {
       blocksContent.isVisible = !value
       headerText.style = value ? STYLE_COLLAPSED : STYLE_SECTION_HEADER
+      sticky.unpin()
     },
     onChange,
   )
@@ -174,6 +175,7 @@ function buildFileView(file: FileDiff, onChange: () => void): StickyGroup {
     value => {
       belowHeader.isVisible = !value
       diffLineText.style = value ? STYLE_COLLAPSED : STYLE_DIFF_LINE
+      sticky.unpin()
     },
     onChange,
   )
