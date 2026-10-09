@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  review: 'link:'
+
 importers:
 
   .:
@@ -14,6 +17,9 @@ importers:
       commander:
         specifier: ^14.0.3
         version: 14.0.3
+      review:
+        specifier: link:.
+        version: 'link:'
     devDependencies:
       '@types/node':
         specifier: ^20.3.2
@@ -25,29 +31,29 @@ importers:
 packages:
 
   '@teaui/core@1.20.22':
-    resolution: {integrity: sha512-URMxcHRnFxzz+nmRyByHKeSB24XGF6KPmB0SSFHjndy560S+uCl2L2HeoqVtDRyZfCMxDoQ4FxNx+gX6B6rfjA==}
+    resolution: {integrity: sha512-URMxcHRnFxzz+nmRyByHKeSB24XGF6KPmB0SSFHjndy560S+uCl2L2HeoqVtDRyZfCMxDoQ4FxNx+gX6B6rfjA==, tarball: https://registry.npmjs.org/@teaui/core/-/core-1.20.22.tgz}
     engines: {node: '>= 18.12.0'}
 
   '@teaui/inspect@1.20.22':
-    resolution: {integrity: sha512-DF79nzubci78BjM9TKjO3E2xmvhxsRwFEi2W0PLFwVOXbvlFBG18H/PrNtOVb44KADKGGTXXUEmbOiUnD4SODQ==}
+    resolution: {integrity: sha512-DF79nzubci78BjM9TKjO3E2xmvhxsRwFEi2W0PLFwVOXbvlFBG18H/PrNtOVb44KADKGGTXXUEmbOiUnD4SODQ==, tarball: https://registry.npmjs.org/@teaui/inspect/-/inspect-1.20.22.tgz}
 
   '@teaui/term@1.20.22':
-    resolution: {integrity: sha512-i67m6a6lwPQw7W5uRXCjLLacQOO/5aDqkMrfZaFizPA0KCurNdc55nYsDfPRb+enfPfETD/q2grTZYwTurPAoQ==}
+    resolution: {integrity: sha512-i67m6a6lwPQw7W5uRXCjLLacQOO/5aDqkMrfZaFizPA0KCurNdc55nYsDfPRb+enfPfETD/q2grTZYwTurPAoQ==, tarball: https://registry.npmjs.org/@teaui/term/-/term-1.20.22.tgz}
 
   '@types/node@20.19.43':
-    resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==}
+    resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==, tarball: https://registry.npmjs.org/@types/node/-/node-20.19.43.tgz}
 
   commander@14.0.3:
-    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==, tarball: https://registry.npmjs.org/commander/-/commander-14.0.3.tgz}
     engines: {node: '>=20'}
 
   typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==, tarball: https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz}
     engines: {node: '>=14.17'}
     hasBin: true
 
   undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==, tarball: https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz}
 
 snapshots:
 

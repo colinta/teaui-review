@@ -102,7 +102,7 @@ class StickyContent extends Stack {
 
     sticky.isPinned = false
     this.#scrollTarget = top - pinned.base
-    this.#scrollable.scrollTo(this.#scrollTarget)
+    this.#scrollable.scrollTo({y: this.#scrollTarget})
   }
 
   /**
@@ -112,7 +112,7 @@ class StickyContent extends Stack {
    */
   settleScroll() {
     if (this.#scrollTarget !== undefined) {
-      this.#scrollable.scrollTo(this.#scrollTarget)
+      this.#scrollable.scrollTo({y: this.#scrollTarget})
       this.#scrollTarget = undefined
     }
   }
