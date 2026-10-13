@@ -123,6 +123,9 @@ class StickyContent extends Stack {
     }
     this.pinned = []
 
+    // This pass uses one set of dimensions and an unchanged tree. Reuse
+    // sibling prefixes across group lookups, but never across renders/edits.
+    const offsets: SiblingOffsets = new Map()
     // `base` is the screen row just below the pinned headers so far
     let base = 0
     let groups = this.groups
@@ -130,7 +133,7 @@ class StickyContent extends Stack {
       const threshold = scrollY + base
       let found: {group: StickyGroup; bottom: number} | undefined
       for (const group of groups) {
-        const top = offsetWithin(this, group.block, available)
+        const top = offsetWithin(this, group.block, available, offsets)
         if (top === undefined) {
           continue
         }
@@ -159,15 +162,25 @@ class StickyContent extends Stack {
   }
 }
 
+type SiblingOffsets = Map<
+  View,
+  {
+    next: number
+    height: number
+    positions: Map<View, number>
+  }
+>
+
 /**
  * Sum of the heights of everything above `view`, in `root`'s coordinates.
  * Assumes every container in between is a vertical Stack. Returns undefined
- * if the view (or any ancestor) is hidden.
+ * if the view (or any ancestor) is hidden. Prefixes are local to a single pass.
  */
 function offsetWithin(
   root: View,
   view: View,
   available: Size,
+  offsets: SiblingOffsets = new Map(),
 ): number | undefined {
   let y = 0
   let current = view
@@ -176,14 +189,27 @@ function offsetWithin(
     if (!parent || !current.isVisible) {
       return undefined
     }
-    for (const sibling of parent.children) {
-      if (sibling === current) {
-        break
-      }
-      if (sibling.isVisible) {
-        y += sibling.naturalSize(available).height
-      }
+    let prefix = offsets.get(parent)
+    if (!prefix) {
+      prefix = {next: 0, height: 0, positions: new Map()}
+      offsets.set(parent, prefix)
     }
+    // Advance only as far as requested. Each sibling is visited/measured at
+    // most once per pass, even when hundreds of groups share this parent.
+    while (
+      !prefix.positions.has(current) &&
+      prefix.next < parent.children.length
+    ) {
+      if (prefix.next > 0) {
+        const previous = parent.children[prefix.next - 1]
+        if (previous.isVisible) {
+          prefix.height += previous.naturalSize(available).height
+        }
+      }
+      const sibling = parent.children[prefix.next++]
+      prefix.positions.set(sibling, prefix.height)
+    }
+    y += prefix.positions.get(current) ?? 0
     y += parent.padding?.top ?? 0
     current = parent
   }
@@ -199,17 +225,14 @@ export class StickyScroll extends Container {
   #scrollable: Scrollable
   #content: StickyContent
 
-  constructor({
-    children,
-    groups,
-  }: {
-    children: View[]
-    groups: StickyGroup[]
-  }) {
+  constructor({children, groups}: {children: View[]; groups: StickyGroup[]}) {
     super({})
     this.#content = new StickyContent({direction: 'down', children})
     this.#content.groups = groups
-    this.#scrollable = Scrollable.down({children: [this.#content]})
+    this.#scrollable = Scrollable.down({
+      children: [this.#content],
+      scrollable: 'vertical',
+    })
     this.add(this.#scrollable)
   }
 

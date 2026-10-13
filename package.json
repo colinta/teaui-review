@@ -10,16 +10,21 @@
   "scripts": {
     "build": "pnpm clean && tsc",
     "start": "node .dist/bin.js",
+    "test": "pnpm build && node --test scripts/*.test.mjs",
+    "profile": "pnpm build && node scripts/profile.mjs",
     "clean": "rm -rf .dist/"
   },
   "private": true,
   "dependencies": {
-    "@teaui/core": "1.20.22",
+    "@teaui/core": "link:../teaui/packages/core",
+    "@teaui/remote-control": "link:../teaui/packages/remote-control",
     "commander": "^14.0.3",
     "review": "link:"
   },
   "devDependencies": {
     "@types/node": "^20.3.2",
+    "@xterm/headless": "5.5.0",
+    "node-pty": "1.2.0-beta.15",
     "typescript": "^5.6.3"
   }
 }

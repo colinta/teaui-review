@@ -17,6 +17,7 @@ import type {
   ParsedDiff,
 } from './diff.js'
 import {Sticky, StickyScroll, type StickyGroup} from './sticky.js'
+import {textRuns} from './text-runs.js'
 
 const STYLE_DIFF_LINE = new Style({bold: true})
 const STYLE_EXTRA_HEADER = new Style({dim: true})
@@ -78,18 +79,24 @@ function buildPatchView(
   indent: number,
   onChange: () => void,
 ): View {
-  const content = Stack.down({
-    children: [
-      ...patch.lines.map(l =>
-        line(
-          `${l.kind === 'add' ? '+' : '-'}${l.text}`,
-          l.kind === 'add' ? STYLE_ADD : STYLE_REMOVE,
-          indent,
-        ),
-      ),
-      ...trailing,
-    ],
-  })
+  const changes: View[] = []
+  let kind: Patch['lines'][number]['kind'] | undefined
+  let run: string[] = []
+  const flush = () => {
+    const style = kind === 'add' ? STYLE_ADD : STYLE_REMOVE
+    changes.push(...textRuns(run).map(text => line(text, style, indent)))
+    run = []
+  }
+  for (const change of patch.lines) {
+    if (change.kind !== kind) {
+      flush()
+      kind = change.kind
+    }
+    run.push(`${change.kind === 'add' ? '+' : '-'}${change.text}`)
+  }
+  flush()
+
+  const content = Stack.down({children: [...changes, ...trailing]})
   content.isVisible = !patch.reviewed
 
   const header = reviewRow(
@@ -111,9 +118,10 @@ function buildContextView(
   if (block.type === 'meta') {
     return line(block.raw, STYLE_META, indent)
   }
-  return Stack.down({
-    children: block.lines.map(text => line(` ${text}`, STYLE_CONTEXT, indent)),
-  })
+  const views = textRuns(block.lines.map(text => ` ${text}`)).map(text =>
+    line(text, STYLE_CONTEXT, indent),
+  )
+  return views.length === 1 ? views[0] : Stack.down({children: views})
 }
 
 /**

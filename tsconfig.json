@@ -1,6 +1,6 @@
 {
   "include": ["./"],
-  "exclude": [".dist/", "node_modules/"],
+  "exclude": [".dist/", "node_modules/", "scripts/"],
   "compilerOptions": {
     "target": "esnext",
     "module": "Node16",

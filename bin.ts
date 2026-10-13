@@ -13,6 +13,7 @@ import {
 
 import {parseDiff, serializeDiff} from './diff.js'
 import {loadReview, reviewPath, saveReview} from './persist.js'
+import {DEFAULT_REMOTE_ENDPOINT, startRemoteControl} from './remote.js'
 import {buildReviewView} from './view.js'
 
 async function readStdin(): Promise<string> {
@@ -36,7 +37,7 @@ function reopenStdinAsTty() {
   })
 }
 
-async function run(outputPath: string) {
+async function run(outputPath: string, remoteEndpoint: string | undefined) {
   if (process.stdin.isTTY) {
     console.error(
       'review: expected a unified diff on stdin, e.g.\n\n  git diff | review',
@@ -59,7 +60,8 @@ async function run(outputPath: string) {
 
   reopenStdinAsTty()
 
-  const view = buildReviewView(parsed, () => saveReview(savePath, parsed))
+  const save = () => saveReview(savePath, parsed)
+  const view = buildReviewView(parsed, save)
 
   interceptConsoleLog()
   const [screen] = await Screen.start(
@@ -75,8 +77,12 @@ async function run(outputPath: string) {
     {quitChar: 'C-c'},
   )
 
+  if (remoteEndpoint) {
+    startRemoteControl(screen, remoteEndpoint)
+  }
+
   screen.onExit(() => {
-    saveReview(savePath, parsed)
+    save()
     fs.writeFileSync(outputPath, serializeDiff(parsed))
     console.log(`review: wrote ${outputPath}`)
   })
@@ -90,9 +96,18 @@ new Command()
       'the commented sections.',
   )
   .argument('[output]', 'path to write the reviewed patch to', 'patch.diff')
-  .action(async (output: string) => {
+  .option(
+    '--remote [endpoint-file]',
+    'debugging: let another process drive the TUI (keys, mouse, screen ' +
+      'snapshots) over a local WebSocket. The connection URL (a secret) is ' +
+      `written to the endpoint file (default: ${DEFAULT_REMOTE_ENDPOINT}). ` +
+      'See scripts/remote.mjs',
+  )
+  .action(async (output: string, options: {remote?: string | true}) => {
+    const remoteEndpoint =
+      options.remote === true ? DEFAULT_REMOTE_ENDPOINT : options.remote
     try {
-      await run(output)
+      await run(output, remoteEndpoint)
     } catch (error) {
       console.error(error)
       process.exitCode = 1

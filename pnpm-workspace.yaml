@@ -2,5 +2,7 @@ minimumReleaseAgeExclude:
   - '@teaui/core@1.20.22'
   - '@teaui/inspect@1.20.22'
   - '@teaui/term@1.20.22'
+allowBuilds:
+  node-pty: true
 overrides:
   review: 'link:'
