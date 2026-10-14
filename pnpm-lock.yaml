@@ -12,11 +12,11 @@ importers:
   .:
     dependencies:
       '@teaui/core':
-        specifier: link:../teaui/packages/core
-        version: link:../teaui/packages/core
+        specifier: 1.25.25
+        version: 1.25.25
       '@teaui/remote-control':
-        specifier: link:../teaui/packages/remote-control
-        version: link:../teaui/packages/remote-control
+        specifier: 1.25.25
+        version: 1.25.25
       commander:
         specifier: ^14.0.3
         version: 14.0.3
@@ -38,6 +38,23 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@teaui/core@1.25.25':
+    resolution: {integrity: sha512-rJqjqaxLDaO1YMBNvr0coSDy+U+HdI6M1GD4KabUaD+COpd012lEeYC5FMCuguMgzFp2MA7ABElNYqpFjhXxHw==, tarball: https://registry.npmjs.org/@teaui/core/-/core-1.25.25.tgz}
+    engines: {node: '>= 18.12.0'}
+
+  '@teaui/inspect@1.25.25':
+    resolution: {integrity: sha512-XnnsH6CQBRrZYbLMwLgkUlA1wcCxrivVarm+avnv56d93t1VkMXDsKJwKcdt0VWtkuDbjExNjVIaBgzQGbfaLg==, tarball: https://registry.npmjs.org/@teaui/inspect/-/inspect-1.25.25.tgz}
+
+  '@teaui/remote-control@1.25.25':
+    resolution: {integrity: sha512-88D2Yu1dkeCg22jyA+o6N8SHAKHBp3JGsdsqAlBzs64Ee4m2ePYGqXY382TE+UNcJqwtMOJrFHrQeG4cHk1pcA==, tarball: https://registry.npmjs.org/@teaui/remote-control/-/remote-control-1.25.25.tgz}
+    engines: {node: '>= 18.12.0'}
+
+  '@teaui/result@1.25.25':
+    resolution: {integrity: sha512-P3cURo3lAQIhSsS4lxPA9mLH23WK2zLB80zhksmDHQai35j9MCv/ZtAqiAZJh59xSYM7TI8Cw0xjQf6dsC7Cbg==, tarball: https://registry.npmjs.org/@teaui/result/-/result-1.25.25.tgz}
+
+  '@teaui/term@1.25.25':
+    resolution: {integrity: sha512-VxCYugYQ//IwLuKibs+XNE9kNoO+9s0DpVwbhB8XIIGoU14iT7uopNxVWq/d1/FV1RI9jzZ7E9fP3FZpqhgGwg==, tarball: https://registry.npmjs.org/@teaui/term/-/term-1.25.25.tgz}
 
   '@types/node@20.19.43':
     resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==, tarball: https://registry.npmjs.org/@types/node/-/node-20.19.43.tgz}
@@ -63,7 +80,39 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==, tarball: https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz}
 
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==, tarball: https://registry.npmjs.org/ws/-/ws-8.22.0.tgz}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
 snapshots:
+
+  '@teaui/core@1.25.25':
+    dependencies:
+      '@teaui/inspect': 1.25.25
+      '@teaui/term': 1.25.25
+
+  '@teaui/inspect@1.25.25': {}
+
+  '@teaui/remote-control@1.25.25':
+    dependencies:
+      '@teaui/core': 1.25.25
+      '@teaui/result': 1.25.25
+      ws: 8.22.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  '@teaui/result@1.25.25': {}
+
+  '@teaui/term@1.25.25': {}
 
   '@types/node@20.19.43':
     dependencies:
@@ -82,3 +131,5 @@ snapshots:
   typescript@5.9.3: {}
 
   undici-types@6.21.0: {}
+
+  ws@8.22.0: {}

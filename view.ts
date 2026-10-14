@@ -1,5 +1,6 @@
 import {
   Checkbox,
+  formatTabs,
   Input,
   Separator,
   Stack,
@@ -66,7 +67,11 @@ function reviewRow(
 }
 
 function line(text: string, style: Style, indent: number): Text {
-  return new Text({text, style, paddingLeft: indent})
+  return new Text({
+    text: formatTabs(text, {tabSize: 4}),
+    style,
+    paddingLeft: indent,
+  })
 }
 
 /**

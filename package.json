@@ -16,8 +16,8 @@
   },
   "private": true,
   "dependencies": {
-    "@teaui/core": "link:../teaui/packages/core",
-    "@teaui/remote-control": "link:../teaui/packages/remote-control",
+    "@teaui/core": "1.25.25",
+    "@teaui/remote-control": "1.25.25",
     "commander": "^14.0.3",
     "review": "link:"
   },
